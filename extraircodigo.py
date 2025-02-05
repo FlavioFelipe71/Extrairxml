@@ -2,6 +2,47 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 import streamlit as st
 from io import BytesIO
+import base64
+import os
+
+##### Oculta o botão Deploy do Streamilit
+st.markdown("""
+    <style>
+        .reportview-container {
+            margin-top: -2em;
+        }
+        #MainMenu {visibility: hidden;}
+        .stDeployButton {display:none;}
+        footer {visibility: hidden;}
+        #stDecoration {display:none;}
+    </style>
+""", unsafe_allow_html=True
+)
+
+# Função para ler a imagem e convertê-la para base64
+def get_base64_image(image_path):
+    with open(image_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+    return encoded_string        # Exibir o conteúdo do formulário de anamnese emocional
+# Caminho da imagem
+image_path = "fundo_softdib.jpg"
+# Codificação da imagem em base64
+base64_image = get_base64_image(image_path)
+
+# CSS para definir a imagem de fundo com transparência
+st.markdown(
+    f"""
+    <style>
+    .stApp {{
+        background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url('data:image/png;base64,{base64_image}') no-repeat center center fixed;
+        background-size: cover;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+###### CSS para definir a imagem de fundo [Fim]
+
 
 def extrair_dados_xml(arquivos):
     dados = []
