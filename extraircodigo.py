@@ -5,7 +5,17 @@ from io import BytesIO
 import base64
 import os
 
+st.set_page_config(page_title="Leitor de XML", layout="wide")
+
+# Adicionar a logo ao topo
+# Obtém o diretório atual do script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# Constrói o caminho da imagem dinamicamente
+logo_path = os.path.join(current_dir, "Logo_sd.png")
+# Exibe a logo
+st.image(logo_path, width=200)
 ##### Oculta o botão Deploy do Streamilit
+
 st.markdown("""
     <style>
         .reportview-container {
@@ -137,7 +147,7 @@ def converter_csv(df):
     return output
 
 # Configuração do Streamlit
-st.set_page_config(page_title="Leitor de XML", layout="wide")
+
 st.title("📂 Leitor de XML para Extração de Dados")
 
 # Upload de arquivos XML
@@ -154,3 +164,4 @@ if arquivos_xml:
         st.download_button(label="📥 Baixar CSV", data=csv_bytes, file_name="dados_extraidos.csv", mime="text/csv")
     else:
         st.warning("Nenhum dado encontrado nos arquivos XML. Verifique a estrutura dos arquivos.")
+
