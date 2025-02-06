@@ -68,6 +68,11 @@ def extrair_dados_xml(arquivos):
             for item in root.findall(".//ns:det", namespace):  # Busca todos os produtos
                 prod = item.find("ns:prod", namespace)
                 imposto = item.find("ns:imposto", namespace)  # Bloco de impostos
+                emit = root.find(".//ns:emit", namespace)
+                emitente_cnpj = "N/A"  # Inicializa a variável
+                emitente_nome  = "N/A"  # Inicializa a variável
+                
+
 
                 if prod is not None:
                     cod_prod = prod.findtext("ns:cProd", "N/A", namespace).strip()
@@ -77,9 +82,9 @@ def extrair_dados_xml(arquivos):
                     quantidade = prod.findtext("ns:qCom", "N/A", namespace).strip()
                     valor_unitario = prod.findtext("ns:vUnCom", "N/A", namespace).strip()
                     cod_ean13 = prod.findtext("ns:cEANTrib", "N/A", namespace).strip()
-
                     # Busca o código ANP
                     cod_anp = prod.findtext("ns:cProdANP", "N/A", namespace).strip()
+
                     if cod_anp == "N/A":  # Tenta buscar sem namespace se não encontrar com namespace
                         cod_anp = prod.findtext("cProdANP", "N/A").strip()
                     if cod_anp == "N/A":  # Procura dentro dos elementos filhos
@@ -115,14 +120,51 @@ def extrair_dados_xml(arquivos):
                                 p_ipi = subelem.text.strip()
                                 break
 
+                    # Encontrar o Emitente (Fornecedor)
+                    emit = root.find(".//ns:emit", namespace)
+
+                    # Verificar se o emitente foi encontrado
+                    if emit is not None:
+                        # Tenta buscar o CNPJ e o Nome do emitente
+                        cnpj_tag = emit.find("ns:CNPJ", namespace)
+                        nome_tag = emit.find("ns:xNome", namespace)
+
+                        # Verifica se o CNPJ foi encontrado e não é None
+                        if cnpj_tag is not None:
+                            emitente_cnpj = cnpj_tag.text.strip() if cnpj_tag.text else "N/A"
+
+                        # Verifica se o Nome foi encontrado e não é None
+                        if nome_tag is not None:
+                            emitente_nome = nome_tag.text.strip() if nome_tag.text else "N/A"
+
+                    # Caso não encontre pelo namespace, tenta encontrar diretamente
+                    if emitente_cnpj == "N/A":
+                        emitente_cnpj = root.findtext(".//CNPJ", "N/A")
+                    if emitente_nome == "N/A":
+                        emitente_nome = root.findtext(".//xNome", "N/A")
+
+                    # Última tentativa: buscar iterando pelos elementos do XML
+                    if emitente_cnpj == "N/A":
+                        for subelem in root.iter():
+                            if "CNPJ" in subelem.tag:
+                                emitente_cnpj = subelem.text.strip() if subelem.text else "N/A"
+                                break
+
+                    if emitente_nome == "N/A":
+                        for subelem in root.iter():
+                            if "xNome" in subelem.tag:
+                                emitente_nome = subelem.text.strip() if subelem.text else "N/A"
+                                break
+
 
                     # Adicionar os dados à lista
-                    dados.append([cod_prod, desc_prod, ncm, und,quantidade, valor_unitario, cod_ean13, cod_anp, cst, p_ipi])
+                    dados.append([cod_prod, desc_prod, ncm, und, quantidade, valor_unitario, cod_ean13, cod_anp, cst, p_ipi, emitente_cnpj,emitente_nome])
+
         
         except Exception as e:
             st.error(f"Erro ao processar {arquivo.name}: {e}")
     
-    colunas = ["Cod_Produto", "Desc_Produto", "NCM", "UN","Quantidade", "Valor_Unitario",  "Cod_ean13","Cod_ANP", "CST", "pIPI"]
+    colunas = ["Cod_Produto", "Desc_Produto", "NCM", "UN","Quantidade", "Valor_Unitario",  "Cod_ean13","Cod_ANP", "CST", "pIPI","emitente_cnpj","emitente_nome"]
     df = pd.DataFrame(dados, columns=colunas)
 
     # Ajustar os valores das colunas conforme solicitado
@@ -164,4 +206,5 @@ if arquivos_xml:
         st.download_button(label="📥 Baixar CSV", data=csv_bytes, file_name="dados_extraidos.csv", mime="text/csv")
     else:
         st.warning("Nenhum dado encontrado nos arquivos XML. Verifique a estrutura dos arquivos.")
+
 
